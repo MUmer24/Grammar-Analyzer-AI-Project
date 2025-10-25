@@ -1,6 +1,5 @@
-
 // ------------------------------------------------------------------
-// 1. TAILWIND CONFIG 
+// 1. TAILWIND CONFIG (Your existing code)
 // ------------------------------------------------------------------
 tailwind.config = {
   darkMode: "class",
@@ -10,9 +9,9 @@ tailwind.config = {
         "primary": "#137fec",
         "background-light": "#f6f7f8",
         "background-dark": "#101922",
-        "success": "#28a745", // Green for positive/correct
-        "warning": "#dc3545", // Red for negative/incorrect
-        "suggestion": "#ffc107", // Yellow for neutral/suggestion
+        "success": "#28a745",
+        "warning": "#dc3545",
+        "suggestion": "#ffc107",
       },
       fontFamily: {
         "display": ["Inter", "sans-serif"]
@@ -23,17 +22,14 @@ tailwind.config = {
 };
 
 // ------------------------------------------------------------------
-// 2. HUGGING FACE API CONFIG (TWO MODELS)
+// 2. HUGGING FACE API CONFIG (Grammar Model)
 // ------------------------------------------------------------------
 
 // ❗️❗️ PASTE YOUR HUGGING FACE KEY HERE ❗️❗️
-const API_KEY = "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";
+const API_KEY = "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"; 
 
-// Model 1: Grammar Checker
+// Using the Text Classification model you found
 const GRAMMAR_MODEL_URL = "https://api-inference.huggingface.co/models/abdulmatinomotoso/English_Grammar_Checker";
-
-// Model 2: Sentiment Analysis (from your screenshot)
-const SENTIMENT_MODEL_URL = "https://api-inference.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english";
 
 
 // ------------------------------------------------------------------
@@ -86,83 +82,66 @@ window.addEventListener('DOMContentLoaded', () => {
         showError("Please enter some text to check.");
         return;
       }
-      // This new function will call both models
-      runFullAnalysis(text); 
+      queryGrammarModel(text);
     });
   }
 
-  // --- Helper function to call a single model ---
-  // This helps avoid repeating the fetch logic
-  async function queryModel(modelUrl, text) {
-    const response = await fetch(
-      modelUrl,
-      {
-        headers: {
-          "Authorization": `Bearer ${API_KEY}`, 
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        body: JSON.stringify({ inputs: text }), 
-      }
-    );
-
-    if (!response.ok) {
-      let errorBody;
-      try {
-          errorBody = await response.json();
-      } catch (e) {
-          throw new Error(`API request failed: ${response.statusText}`);
-      }
-      
-      if (errorBody.error && errorBody.estimated_time) {
-        throw new Error(`Model (${modelUrl.split("/").pop()}) is loading. Please try again in ${Math.ceil(errorBody.estimated_time)} seconds.`);
-      } else if (errorBody.error) {
-        throw new Error(`API Error: ${errorBody.error}`);
-      } else {
-        throw new Error(`API request failed: ${response.statusText}`);
-      }
-    }
-
-    const result = await response.json();
-
-    // Check for valid result structure
-    if (result && result.length > 0 && result[0].length > 0) {
-      return result[0]; // This is the array of scores
-    } else {
-      throw new Error("Invalid response structure from API.");
-    }
-  }
-
-
-  // ---  Main analysis function ---
-  async function runFullAnalysis(text) {
-    // 1. Show loading spinner and disable button
+  // --- Function to call the AI Model ---
+  async function queryGrammarModel(text) {
     if (loadingSpinner) {
         loadingSpinner.classList.remove('hidden');
     }
-    resultsSection.innerHTML = ''; // Clear old results
+    resultsSection.innerHTML = ''; 
     checkButton.disabled = true;
 
     try {
-      // 2. Call both models at the same time
-      // Promise.all waits for both to finish
-      const [grammarResult, sentimentResult] = await Promise.all([
-        queryModel(GRAMMAR_MODEL_URL, text),
-        queryModel(SENTIMENT_MODEL_URL, text)
-      ]);
-      
-      console.log("Grammar Result:", grammarResult);
-      console.log("Sentiment Result:", sentimentResult);
+      console.log(`Querying model: ${GRAMMAR_MODEL_URL} with text: ${text}`);
 
-      // 3. Show both results
-      displayFullResults(grammarResult, sentimentResult);
+      const response = await fetch(
+        GRAMMAR_MODEL_URL,
+        {
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`, 
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+          body: JSON.stringify({ inputs: text }), 
+        }
+      );
+
+      if (!response.ok) {
+        let errorBody;
+        try {
+            // This is the CORS error. The request fails and has no JSON body.
+            errorBody = await response.json();
+        } catch (e) {
+            // This is what happens on your local machine
+            throw new Error("API request failed:"); 
+        }
+        
+        // This is what happens on a LIVE server if the model is asleep
+        if (errorBody.error && errorBody.estimated_time) {
+          throw new Error(`Model is loading. Please try again in ${Math.ceil(errorBody.estimated_time)} seconds.`);
+        } else if (errorBody.error) {
+          throw new Error(`API Error: ${errorBody.error}`);
+        } else {
+          throw new Error(`API request failed: ${response.statusText}`);
+        }
+      }
+
+      const result = await response.json();
+      
+      if (result && result.length > 0 && result[0].length > 0) {
+        const scores = result[0];
+        displayResults(scores);
+      } else {
+        throw new Error("Invalid response structure from API.");
+      }
 
     } catch (error) {
-      // 4. Show any errors
       console.error("Full error object:", error);
       showError(error.message);
     } finally {
-      // 5. Hide loading spinner and re-enable button
       if (loadingSpinner) {
         loadingSpinner.classList.add('hidden');
       }
@@ -170,27 +149,16 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- Function to display BOTH results ---
-  function displayFullResults(grammarScores, sentimentScores) {
-    resultsSection.innerHTML = `
-      <!-- Title for the whole section -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 class="text-2xl font-bold tracking-[-0.015em] text-[#111418] dark:text-white">Analysis Results</h2>
-      </div>
+  // --- Function to display the "Analysis" ---
+  function displayResults(scores) {
+    resultsSection.innerHTML = '';
+    
+    let bestResult = scores.reduce((prev, current) => {
+      return (prev.score > current.score) ? prev : current;
+    });
 
-      <!-- Grid layout for the two cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-        ${buildGrammarCard(grammarScores)}
-        ${buildSentimentCard(sentimentScores)}
-      </div>
-    `;
-  }
-
-  // --- Helper function to build the Grammar Card ---
-  function buildGrammarCard(scores) {
-    let bestResult = scores.reduce((prev, current) => (prev.score > current.score) ? prev : current);
     const label = bestResult.label;
-    const confidence = (bestResult.score * 100).toFixed(0);
+    const confidence = (bestResult.score * 100).toFixed(0); 
 
     let title, message, borderColor, spanText, spanColor;
 
@@ -200,6 +168,7 @@ window.addEventListener('DOMContentLoaded', () => {
       spanText = "Correct";
       spanColor = "text-success";
       borderColor = "border-success/50 dark:border-success/40";
+      
       if (confidence >= 95) message = `Excellent! The AI is ${confidence}% certain your grammar is perfect.`;
       else if (confidence >= 75) message = `Nice job. The AI is ${confidence}% confident this is correct.`;
       else message = `The AI is ${confidence}% confident this is correct, but it's not 100% sure.`;
@@ -208,63 +177,26 @@ window.addEventListener('DOMContentLoaded', () => {
       spanText = "Incorrect";
       spanColor = "text-warning";
       borderColor = "border-warning/50 dark:border-warning/40";
+      
       if (confidence >= 95) message = `Whoops! The AI is ${confidence}% sure it found an error.`;
       else if (confidence >= 75) message = `The AI is ${confidence}% confident there's a mistake.`;
       else message = `The AI is only ${confidence}% confident, but it's leaning towards this being incorrect.`;
     }
 
-    return `
-      <div class="w-full rounded-xl border ${borderColor} bg-white dark:bg-gray-800 p-6 shadow-sm flex flex-col gap-3">
-        <div class="flex justify-between items-center">
-          <h3 class="font-bold text-lg text-[#111418] dark:text-white">${title}</h3>
-          <span class="font-semibold text-sm ${spanColor}">(${spanText} - ${confidence}%)</span>
+    resultsSection.innerHTML = `
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 class="text-2xl font-bold tracking-[-0.015em] text-[#111418] dark:text-white">${title}</h2>
+        <div class="flex items-center gap-4">
+          <p class="text-base text-gray-600 dark:text-gray-300">
+            <span class="font-bold ${spanColor}">${spanText}</span> (Confidence: ${confidence}%)
+          </p>
         </div>
+      </div>
+      <div class="w-full rounded-xl border ${borderColor} bg-white dark:bg-gray-800 p-6 shadow-sm">
         <p class="text-base leading-relaxed text-gray-700 dark:text-gray-300">${message}</p>
       </div>
     `;
   }
-
-  // ---  Helper function to build the Sentiment Card ---
-  function buildSentimentCard(scores) {
-    let bestResult = scores.reduce((prev, current) => (prev.score > current.score) ? prev : current);
-    const label = bestResult.label.toUpperCase(); // e.g., "POSITIVE", "NEGATIVE"
-    const confidence = (bestResult.score * 100).toFixed(0);
-
-    let title, message, borderColor, spanText, spanColor, icon;
-
-    if (label === 'POSITIVE') {
-      title = "Sentiment Analysis 😊";
-      spanText = "Positive";
-      spanColor = "text-success";
-      borderColor = "border-success/50 dark:border-success/40";
-      if (confidence >= 95) message = `This text is very positive! (AI is ${confidence}% confident).`;
-      else message = `This text has a positive tone. (AI is ${confidence}% confident).`;
-    } else if (label === 'NEGATIVE') {
-      title = "Sentiment Analysis ☹️";
-      spanText = "Negative";
-      spanColor = "text-warning";
-      borderColor = "border-warning/50 dark:border-warning/40";
-      if (confidence >= 95) message = `This text seems very negative. (AI is ${confidence}% confident).`;
-      else message = `This text has a negative tone. (AI is ${confidence}% confident).`;
-    } else { // Handle NEUTRAL or other labels
-      title = "Sentiment Analysis 😐";
-      spanText = "Neutral";
-      spanColor = "text-suggestion"; // Using your yellow color
-      borderColor = "border-suggestion/60 dark:border-suggestion/50";
-      message = `This text seems neutral in tone. (AI is ${confidence}% confident).`;
-    }
-
-    return `
-      <div class="w-full rounded-xl border ${borderColor} bg-white dark:bg-gray-800 p-6 shadow-sm flex flex-col gap-3">
-        <div class="flex justify-between items-center">
-          <h3 class="font-bold text-lg text-[#111418] dark:text-white">${title}</h3>
-          <span class="font-semibold text-sm ${spanColor}">(${spanText} - ${confidence}%)</span>
-        </div>
-        <p class="text-base leading-relaxed text-gray-700 dark:text-gray-300">${message}</p>
-      </div>
-    `;
-  }
-
 
   // --- Helper function for showing errors ---
   function showError(message) {
@@ -274,15 +206,10 @@ window.addEventListener('DOMContentLoaded', () => {
         <p class="text-gray-600 dark:text-gray-300 text-sm mt-2">${message}</p>
       </div>
     `;
-    // Also hide loading spinner if an error occurs
     if (loadingSpinner) {
       loadingSpinner.classList.add('hidden');
     }
   }
 
 });
-
-
-
-
 
