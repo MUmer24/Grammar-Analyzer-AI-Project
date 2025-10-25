@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AI Grammar Checker</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    
+    <!-- Tailwind Config Script -->
+    <script src="script.js"></script>
+    
+    <!-- Custom Stylesheet -->
+    <link href="style.css" rel="stylesheet" />
+</head>
+
+<body class="font-display bg-background-light dark:bg-background-dark text-[#111418] dark:text-gray-200">
+    <div class="relative flex min-h-screen w-full flex-col">
+        <header
+            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 dark:border-gray-700 px-6 sm:px-10 py-3 bg-white dark:bg-background-dark sticky top-0 z-10">
+            <div class="flex items-center gap-4">
+                <div class="size-6 text-primary">
+                    <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
+                            fill="currentColor"></path>
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold tracking-[-0.015em] text-[#111418] dark:text-white">AI Grammar Checker</h2>
+            </div>
+            
+        </header>
+        <main class="flex flex-1 justify-center py-10 px-4 sm:px-6 lg:px-8">
+            <div class="flex w-full max-w-4xl flex-col items-center gap-8">
+                <div class="flex w-full flex-col gap-3 text-center">
+                    <h1 class="text-4xl sm:text-5xl font-black tracking-[-0.033em] text-[#111418] dark:text-white">Check
+                        Your Text for Grammar and Style</h1>
+                    <p class="text-lg text-[#617589] dark:text-gray-400">Polish your writing with our powerful AI-driven
+                        grammar and style checker.</p>
+                </div>
+                <div
+                    class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                    <div class="flex w-full flex-col gap-2">
+                        <textarea
+                            class="form-input flex w-full min-w-0 flex-1 resize-y overflow-auto rounded-lg border border-[#dbe0e6] dark:border-gray-600 bg-white dark:bg-gray-700 p-4 text-base placeholder:text-[#617589] dark:placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:text-gray-200 min-h-60"
+                            id="text-input" placeholder="Type or paste your text here to get started..."></textarea>
+                        <div class="flex justify-between items-center text-sm text-[#617589] dark:text-gray-400">
+                            <!-- Added id="word-count" here -->
+                             <p id="word-count">0/300 words</p>
+                            <!-- Added id="clear-button" here -->
+                            <button
+                                id="clear-button"
+                                class="flex items-center gap-1 hover:text-primary dark:hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-base">delete</span>
+                                Clear Text
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex pt-6 justify-center">
+                        <button
+                            id="check-button"
+                            class="flex w-full sm:w-auto min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="truncate">Check Grammar</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex w-full flex-col items-center gap-4 py-8 hidden">
+                    <div class="animate-spin text-primary">
+                        <span class="material-symbols-outlined !text-4xl">progress_activity</span>
+                    </div>
+                    <p class="text-[#617589] dark:text-gray-400 text-lg">Analyzing your text...</p>
+                </div>
+                <div classs="w-full flex flex-col gap-6" id="results-section">
+                 
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>
