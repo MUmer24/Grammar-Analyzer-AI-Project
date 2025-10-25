@@ -1,7 +1,6 @@
 
-// const API_KEY = "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";
 // ------------------------------------------------------------------
-// 1. TAILWIND CONFIG (Your existing code)
+// 1. TAILWIND CONFIG 
 // ------------------------------------------------------------------
 tailwind.config = {
   darkMode: "class",
@@ -28,7 +27,7 @@ tailwind.config = {
 // ------------------------------------------------------------------
 
 // ❗️❗️ PASTE YOUR HUGGING FACE KEY HERE ❗️❗️
-const API_KEY = "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";
+const API_KEY = "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";
 
 // Model 1: Grammar Checker
 const GRAMMAR_MODEL_URL = "https://api-inference.huggingface.co/models/abdulmatinomotoso/English_Grammar_Checker";
@@ -51,7 +50,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const resultsSection = document.getElementById('results-section');
 
 
-  // --- Word Count & Clear Functions (Your existing code) ---
+  // --- Word Count & Clear Functions ---
   function updateWordCount() {
     const text = textInput.value;
     let wordCount = 0;
@@ -92,7 +91,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- NEW: Helper function to call a single model ---
+  // --- Helper function to call a single model ---
   // This helps avoid repeating the fetch logic
   async function queryModel(modelUrl, text) {
     const response = await fetch(
@@ -135,7 +134,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  // --- UPDATED: Main analysis function ---
+  // ---  Main analysis function ---
   async function runFullAnalysis(text) {
     // 1. Show loading spinner and disable button
     if (loadingSpinner) {
@@ -171,7 +170,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- NEW: Function to display BOTH results ---
+  // --- Function to display BOTH results ---
   function displayFullResults(grammarScores, sentimentScores) {
     resultsSection.innerHTML = `
       <!-- Title for the whole section -->
@@ -187,7 +186,7 @@ window.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
-  // --- NEW: Helper function to build the Grammar Card ---
+  // --- Helper function to build the Grammar Card ---
   function buildGrammarCard(scores) {
     let bestResult = scores.reduce((prev, current) => (prev.score > current.score) ? prev : current);
     const label = bestResult.label;
@@ -225,7 +224,7 @@ window.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
-  // --- NEW: Helper function to build the Sentiment Card ---
+  // ---  Helper function to build the Sentiment Card ---
   function buildSentimentCard(scores) {
     let bestResult = scores.reduce((prev, current) => (prev.score > current.score) ? prev : current);
     const label = bestResult.label.toUpperCase(); // e.g., "POSITIVE", "NEGATIVE"
@@ -282,6 +281,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
 
 
 
