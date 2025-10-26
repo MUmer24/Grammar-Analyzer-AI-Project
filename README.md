@@ -91,4 +91,4 @@ For a real-world application, you should **never** expose your API key on the cl
 * **Google Fonts:** (Inter) For clean, modern typography.
 * **Material Symbols:** For icons.
 
-## 📂 Project Structure
+

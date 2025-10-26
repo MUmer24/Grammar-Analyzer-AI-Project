@@ -1,22 +1,27 @@
 // ------------------------------------------------------------------
-// 1. TAILWIND CONFIG (Your existing code)
+// 1. TAILWIND CONFIG 
 // ------------------------------------------------------------------
 tailwind.config = {
   darkMode: "class",
   theme: {
     extend: {
       colors: {
-        "primary": "#137fec",
+        primary: "#137fec",
         "background-light": "#f6f7f8",
         "background-dark": "#101922",
-        "success": "#28a745",
-        "warning": "#dc3545",
-        "suggestion": "#ffc107",
+        success: "#28a745",
+        warning: "#dc3545",
+        suggestion: "#ffc107",
       },
       fontFamily: {
-        "display": ["Inter", "sans-serif"]
+        display: ["Inter", "sans-serif"],
       },
-      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+      borderRadius: {
+        DEFAULT: "0.25rem",
+        lg: "0.5rem",
+        xl: "0.75rem",
+        full: "9999px",
+      },
     },
   },
 };
@@ -25,26 +30,22 @@ tailwind.config = {
 // 2. HUGGING FACE API CONFIG (Grammar Model)
 // ------------------------------------------------------------------
 
-// ❗️❗️ PASTE YOUR HUGGING FACE KEY HERE ❗️❗️
-const API_KEY = "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"; 
-
-// Using the Text Classification model you found
-const GRAMMAR_MODEL_URL = "https://api-inference.huggingface.co/models/abdulmatinomotoso/English_Grammar_Checker";
-
+// This URL points to backend function, not Hugging Face
+const GRAMMAR_MODEL_URL = "/api/check";
 
 // ------------------------------------------------------------------
 // 3. MAIN SCRIPT
 // ------------------------------------------------------------------
-window.addEventListener('DOMContentLoaded', () => {
-
+window.addEventListener("DOMContentLoaded", () => {
   // --- Get UI Elements ---
-  const textInput = document.getElementById('text-input');
-  const wordCountDisplay = document.getElementById('word-count');
-  const clearButton = document.getElementById('clear-button');
-  const checkButton = document.getElementById('check-button'); 
-  const loadingSpinner = document.querySelector('.flex.w-full.flex-col.items-center.gap-4.py-8');
-  const resultsSection = document.getElementById('results-section');
-
+  const textInput = document.getElementById("text-input");
+  const wordCountDisplay = document.getElementById("word-count");
+  const clearButton = document.getElementById("clear-button");
+  const checkButton = document.getElementById("check-button");
+  const loadingSpinner = document.querySelector(
+    ".flex.w-full.flex-col.items-center.gap-4.py-8"
+  );
+  const resultsSection = document.getElementById("results-section");
 
   // --- Word Count & Clear Functions ---
   function updateWordCount() {
@@ -58,25 +59,25 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function clearText() {
-    textInput.value = '';
+    textInput.value = "";
     updateWordCount();
-    resultsSection.innerHTML = ''; // Clear results
+    resultsSection.innerHTML = ""; // Clear results
     if (loadingSpinner) {
-      loadingSpinner.classList.add('hidden');
+      loadingSpinner.classList.add("hidden");
     }
   }
 
   // --- Add Event Listeners ---
   if (textInput) {
-    textInput.addEventListener('input', updateWordCount);
+    textInput.addEventListener("input", updateWordCount);
   }
   if (clearButton) {
-    clearButton.addEventListener('click', clearText);
+    clearButton.addEventListener("click", clearText);
   }
 
   // --- Main Button Event Listener ---
   if (checkButton) {
-    checkButton.addEventListener('click', () => {
+    checkButton.addEventListener("click", () => {
       const text = textInput.value;
       if (text.trim() === "") {
         showError("Please enter some text to check.");
@@ -89,39 +90,39 @@ window.addEventListener('DOMContentLoaded', () => {
   // --- Function to call the AI Model ---
   async function queryGrammarModel(text) {
     if (loadingSpinner) {
-        loadingSpinner.classList.remove('hidden');
+      loadingSpinner.classList.remove("hidden");
     }
-    resultsSection.innerHTML = ''; 
+    resultsSection.innerHTML = "";
     checkButton.disabled = true;
 
     try {
       console.log(`Querying model: ${GRAMMAR_MODEL_URL} with text: ${text}`);
 
-      const response = await fetch(
-        GRAMMAR_MODEL_URL,
-        {
-          headers: {
-            "Authorization": `Bearer ${API_KEY}`, 
-            "Content-Type": "application/json",
-          },
-          method: "POST",
-          body: JSON.stringify({ inputs: text }), 
-        }
-      );
+      const response = await fetch(GRAMMAR_MODEL_URL, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        body: JSON.stringify({ inputs: text }),
+      });
 
       if (!response.ok) {
         let errorBody;
         try {
-            // This is the CORS error. The request fails and has no JSON body.
-            errorBody = await response.json();
+          // This is the CORS error. The request fails and has no JSON body.
+          errorBody = await response.json();
         } catch (e) {
-            // This is what happens on your local machine
-            throw new Error("API request failed:"); 
+          // This is what happens on your local machine
+          throw new Error("API request failed:");
         }
-        
+
         // This is what happens on a LIVE server if the model is asleep
         if (errorBody.error && errorBody.estimated_time) {
-          throw new Error(`Model is loading. Please try again in ${Math.ceil(errorBody.estimated_time)} seconds.`);
+          throw new Error(
+            `Model is loading. Please try again in ${Math.ceil(
+              errorBody.estimated_time
+            )} seconds.`
+          );
         } else if (errorBody.error) {
           throw new Error(`API Error: ${errorBody.error}`);
         } else {
@@ -130,20 +131,22 @@ window.addEventListener('DOMContentLoaded', () => {
       }
 
       const result = await response.json();
-      
+
       if (result && result.length > 0 && result[0].length > 0) {
         const scores = result[0];
         displayResults(scores);
+      } else if (result.error) {
+        // This will catch errors from our backend (e.g., "model is loading")
+        throw new Error(result.error);
       } else {
         throw new Error("Invalid response structure from API.");
       }
-
     } catch (error) {
       console.error("Full error object:", error);
       showError(error.message);
     } finally {
       if (loadingSpinner) {
-        loadingSpinner.classList.add('hidden');
+        loadingSpinner.classList.add("hidden");
       }
       checkButton.disabled = false;
     }
@@ -151,36 +154,42 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // --- Function to display the "Analysis" ---
   function displayResults(scores) {
-    resultsSection.innerHTML = '';
-    
+    resultsSection.innerHTML = "";
+
     let bestResult = scores.reduce((prev, current) => {
-      return (prev.score > current.score) ? prev : current;
+      return prev.score > current.score ? prev : current;
     });
 
     const label = bestResult.label;
-    const confidence = (bestResult.score * 100).toFixed(0); 
+    const confidence = (bestResult.score * 100).toFixed(0);
 
     let title, message, borderColor, spanText, spanColor;
 
     // LABEL_1 = Correct, LABEL_0 = Incorrect
-    if (label === 'LABEL_1') {
+    if (label === "LABEL_1") {
       title = "Grammar Analysis ✅";
       spanText = "Correct";
       spanColor = "text-success";
       borderColor = "border-success/50 dark:border-success/40";
-      
-      if (confidence >= 95) message = `Excellent! The AI is ${confidence}% certain your grammar is perfect.`;
-      else if (confidence >= 75) message = `Nice job. The AI is ${confidence}% confident this is correct.`;
-      else message = `The AI is ${confidence}% confident this is correct, but it's not 100% sure.`;
+
+      if (confidence >= 95)
+        message = `Excellent! The AI is ${confidence}% certain your grammar is perfect.`;
+      else if (confidence >= 75)
+        message = `Nice job. The AI is ${confidence}% confident this is correct.`;
+      else
+        message = `The AI is ${confidence}% confident this is correct, but it's not 100% sure.`;
     } else {
       title = "Grammar Analysis ⚠️";
       spanText = "Incorrect";
       spanColor = "text-warning";
       borderColor = "border-warning/50 dark:border-warning/40";
-      
-      if (confidence >= 95) message = `Whoops! The AI is ${confidence}% sure it found an error.`;
-      else if (confidence >= 75) message = `The AI is ${confidence}% confident there's a mistake.`;
-      else message = `The AI is only ${confidence}% confident, but it's leaning towards this being incorrect.`;
+
+      if (confidence >= 95)
+        message = `Whoops! The AI is ${confidence}% sure it found an error.`;
+      else if (confidence >= 75)
+        message = `The AI is ${confidence}% confident there's a mistake.`;
+      else
+        message = `The AI is only ${confidence}% confident, but it's leaning towards this being incorrect.`;
     }
 
     resultsSection.innerHTML = `
@@ -207,9 +216,7 @@ window.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
     if (loadingSpinner) {
-      loadingSpinner.classList.add('hidden');
+      loadingSpinner.classList.add("hidden");
     }
   }
-
 });
-
