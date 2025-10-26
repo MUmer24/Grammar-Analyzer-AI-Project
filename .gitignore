@@ -1,0 +1,9 @@
+# Ignore the local environment file
+.env
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore Node.js dependencies (good practice)
+node_modules
