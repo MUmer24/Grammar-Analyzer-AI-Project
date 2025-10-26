@@ -73,8 +73,8 @@ To run this project locally, you can no longer just use a simple Python server b
 _(Note: Make sure to add .env to your .gitignore file so you don't accidentally commit your key!)_
 
 3.  **Run a Local Server:**
-   * Open your terminal in the project's root folder.
-   * Run the following command:
+    * Open your terminal in the project's root folder.
+    * Run the following command:
 
     ```bash
     vercel dev
